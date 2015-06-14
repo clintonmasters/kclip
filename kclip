@@ -1,0 +1,63 @@
+$\n#!/bin/sh -e
+# kclip -- clipboard utility 6/13/2015 --cbm
+# output kde clipboard or read contents from stdin
+
+# help from http://milianw.de/code-snippets/access-klipper-clipboard-on-cli-under-kde4
+
+# Takes no arguments. If stdin is present, read from it else output
+
+
+usage () {
+
+	printf "\n%s\n" "kclip - Access KDE clipboard aka Klipper from the command line"
+ 	printf "%s\n"   "usage: kclip"
+    	printf "\t%s\n"		"print current contents of klipper"
+  	printf "%s\n"   'usage: echo "foobar" | ./kclipr'
+    	printf "\t%s\n\n"	'set klipper to "foobar"'
+
+}
+
+# Check for arguements
+# Show usage
+
+while getopts 'h' opt
+do
+	case $opt in
+		*)
+			usage
+			exit 1
+			;;
+	esac
+done
+
+# Read from file if we have one
+
+if [ -n "$1" ]; then
+
+  exec <"$1"
+
+elif  tty >/dev/null ; then
+
+	# no user input was given therefore
+	# print out the current contents of the clipboard
+
+	qdbus org.kde.klipper /klipper getClipboardContents
+
+  	exit 
+fi
+
+
+## check for stdin
+#if [ ! tty -s  &&  stdin=$(</dev/stdin)  && [ "$stdin" ] ] ; then
+
+if  ! test -t 0; then
+
+	# get the rest of stdin
+	stdin=$stdin$'\n'$(cat)
+
+ 	# set input as clipboard content
+  	qdbus org.kde.klipper /klipper setClipboardContents "$stdin"
+
+  	exit
+
+fi
